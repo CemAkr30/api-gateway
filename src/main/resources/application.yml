@@ -1,0 +1,103 @@
+# Server Configuration
+server:
+  shutdown: graceful
+# Spring App Configuration & Gateway Cloud Default-Filters Configuration
+spring:
+  webflux:
+    base-path: /api
+  main:
+    web-application-type: reactive
+  application:
+    name: ${appName:api-gateway}
+  data:
+    elasticsearch:
+      repositories:
+        enabled: false
+  cloud:
+    gateway:
+      httpclient:
+        response-timeout: ${httpClientContextPropagationResponseTimeout:120s}
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+      discovery:
+        locator:
+          enabled: true
+      default-filters:
+        - PreLogging=true
+        - Trace
+        - StripBasePath=/api
+        - PostLogging=true
+      routes:
+        - id: cacheConfigManagerService
+          uri: ${gatewayRouteCacheConfigManagerServiceUri}
+          predicates:
+            - Path=${spring.webflux.base-path}/cache/**
+          filters:
+            - Authorization=true
+        - id: queueManagementService
+          uri: ${gatewayRouteQueueManagementServiceUri}
+          predicates:
+            - Path=${spring.webflux.base-path}/qma/**
+          filters:
+            - Authorization=true
+# Logging
+logging:
+  level:
+    root: info
+# Management Endpoints Actuator
+management:
+  endpoint:
+    health:
+      group:
+        custom:
+          include: "*"
+          show-components: always
+          show-details: always
+  elastic:
+    metrics:
+      export:
+        host: http://${metricsExportHost}:${metricsExportPort}
+        enabled: true
+        user-name: ${metricsExportUsername}
+        password: ${metricsExportPassword}
+        step: 10s
+  tracing:
+    sampling:
+      probability: 1.0
+app:
+  log:
+    path: ${LOG_PATH:./log}
+  pod:
+    name: ${POD_NAME:api-gateway}
+elastic:
+  apm:
+    server-url: http://${apmHost}:${apmPort}
+    service-name: ${appName}
+    application-packages: tr.gov.gib.api.gateway
+    environment: ${activeProfile}
+    log-level: ${logLevel}
+    enable-experimental-instrumentations: ${experimentalInstrumentation}
+    transaction-sample-rate: ${sampleRate}
+    span-frames-min-duration: ${spanMinDuration}
+    metrics-interval: ${metricsInterval}
+    use-path-as-transaction-name: true
+# API Key Security Configuration
+api-security:
+  key: ${apiKey}
+  fixedTokens: ${allTokens}
+security-ws-validation:
+  service:
+    url: ${securityWsValidationBaseUrl}
+    checkTokenServiceEndpoint: ${checkTokenServiceEndpoint}
+    userInfoByTokenServiceEndpoint: ${userInfoByTokenServiceEndpoint}
+    basicAuth:
+      username: ${extSecurityApiUsername}
+      password: ${extSecurityApiPassword}
+springdoc:
+  swagger-ui:
+    custom:
+      version: 1.4.0

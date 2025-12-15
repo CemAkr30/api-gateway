@@ -1,0 +1,35 @@
+replicaCount: 1
+namespace: x-prod
+nexusHost: x-prod
+profile: prod
+
+yamls:
+  secretRef: x-prod-secrets
+
+securityWsValidation:
+  service:
+    baseUrl: x
+    checkTokenEndpoint: x
+    userInfoByTokenEndpoint: x
+    basicAuth:
+      username: x
+
+httpClient:
+  context:
+    propagation:
+      responseTimeout: 120s
+
+elastic:
+  apm:
+    host: x
+    port: x
+    logLevel: INFO
+    instrumentation: true
+    sampleRate: 1.0
+    spanMinDuration: -1ms
+    metricsInterval: 10s
+  metrics:
+    export:
+      host: x
+      port: x
+      username: x

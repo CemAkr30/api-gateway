@@ -1,0 +1,22 @@
+name: api-gateway
+
+logPath: logs/api-gateway
+
+yamls:
+  configMapApp: api-gateway-conf-app
+  configMapEnv: api-gateway-conf-envs
+  restService: api-gateway
+
+container:
+  port: 8080
+
+service:
+  type: ClusterIP
+  port: 80
+
+gateway:
+  routes:
+    cacheConfigManagerService:
+      uri: http://cache-config-manager-service:8080
+    queueManagementService:
+      uri: http://queue-management-service:8080

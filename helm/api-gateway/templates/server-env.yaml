@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.yamls.configMapEnv }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.name }}
+data:
+  JAVA_OPTS: -Xms512M -Xmx1024M -Dhttp.keepAlive=true -Dhttp.maxConnections=10000000 -Dspring.profiles.active={{ .Values.profile }} -DELASTIC_APM_ENVIRONMENT={{ .Values.profile }} -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8001
+  TZ: Europe/Istanbul

@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.name }}
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.name }}
+    spec:
+      imagePullSecrets:
+        - name: nexus-secret
+      containers:
+        - name: {{ .Values.name }}
+          image: {{ .Values.nexusHost }}:<port>/{{ .Values.name }}:{{ .Chart.Version }}
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "1250Mi"
+            limits:
+              cpu: "1"
+              memory: "2Gi"
+          ports:
+            - containerPort: {{ .Values.container.port }}
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.yamls.configMapApp }}
+            - configMapRef:
+                name: {{ .Values.yamls.configMapEnv }}
+            - secretRef:
+                name: {{ .Values.yamls.secretRef }}
+          env:
+            - name: POD_NAME
+              valueFrom: { fieldRef: { fieldPath: metadata.name } }
+          volumeMounts:
+            - mountPath: /home/gw/logs/
+              name: nfslog-volume
+          startupProbe:
+            httpGet:
+              path: /api/actuator/health
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 5
+            failureThreshold: 12
+      volumes:
+        - name: nfslog-volume
+          hostPath:
+            path: /nfslog/gw/api-gateway
+            type: Directory

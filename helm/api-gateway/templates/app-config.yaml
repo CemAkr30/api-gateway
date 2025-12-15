@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.yamls.configMapApp }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.name }}
+data:
+  LOG_PATH: {{ .Values.logPath }}
+  appName: {{ .Values.name }}
+  # Token Validation Service API
+  securityWsValidationBaseUrl: {{ .Values.securityWsValidation.service.baseUrl }}
+  checkTokenServiceEndpoint: {{ .Values.securityWsValidation.service.checkTokenEndpoint }}
+  userInfoByTokenServiceEndpoint: {{ .Values.securityWsValidation.service.userInfoByTokenEndpoint }}
+  extSecurityApiUsername: {{ .Values.securityWsValidation.service.basicAuth.username }}
+  # Gateway Routes
+  gatewayRouteCacheConfigManagerServiceUri: {{ .Values.gateway.routes.cacheConfigManagerService.uri}}
+  gatewayRouteQueueManagementServiceUri: {{ .Values.gateway.routes.queueManagementService.uri}}
+
+  activeProfile: {{ .Values.profile }}
+
+  apmHost: {{ .Values.elastic.apm.host }}
+  apmPort: {{ .Values.elastic.apm.port | quote}}
+  logLevel: {{ .Values.elastic.apm.logLevel }}
+  experimentalInstrumentation: {{ .Values.elastic.apm.instrumentation | quote }}
+  sampleRate: {{ .Values.elastic.apm.sampleRate | quote }}
+  spanMinDuration: {{ .Values.elastic.apm.spanMinDuration }}
+  metricsInterval: {{ .Values.elastic.apm.metricsInterval }}
+
+  metricsExportHost: {{ .Values.elastic.metrics.export.host }}
+  metricsExportPort: {{ .Values.elastic.metrics.export.port | quote}}
+  metricsExportUsername: {{ .Values.elastic.metrics.export.username }}
+
+  # http client
+  httpClientContextPropagationResponseTimeout: {{ .Values.httpClient.context.propagation.responseTimeout }}

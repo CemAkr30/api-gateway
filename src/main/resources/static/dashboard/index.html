@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>EBYN Gateway - Professional Admin Panel</title>
+  <!-- Added inline SVG favicon to prevent 404 error -->
+  <link rel="icon"
+        href="/api/dashboard/images/projectavatar.png">
+  <link rel="stylesheet" href="/api/dashboard/css/style.css">
+  <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo" style="width:32px; height:32px; background: transparent;">
+        <img src="/api/dashboard/images/projectavatar.png" width="40" height="40" alt="logo"
+             style="display:block; border-radius:8px;"/>
+      </div>
+      <div>
+        <h1>EBYN Gateway</h1>
+        <div class="subtitle">Professional Admin Panel</div>
+      </div>
+    </div>
+
+    <nav class="nav" id="main-nav">
+      <button data-view="dashboard" class="active">
+        <span class="icon">📊</span>
+        <span>Dashboard</span>
+      </button>
+      <button data-view="routes">
+        <span class="icon">🔀</span>
+        <span>Routes</span>
+      </button>
+      <button data-view="filters">
+        <span class="icon">⚙️</span>
+        <span>Filters</span>
+      </button>
+      <button data-view="metrics">
+        <span class="icon">📈</span>
+        <span>Metrics</span>
+      </button>
+      <button data-view="health">
+        <span class="icon">💚</span>
+        <span>Health</span>
+      </button>
+      <button data-view="monitoring">
+        <span class="icon">🔍</span>
+        <span>Live Monitor</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-foot">
+      <div class="status-indicator">
+        <div class="status-dot" id="connectionStatus"></div>
+        <span id="connectionText">Connecting...</span>
+      </div>
+      <div class="muted">Base: <b>/api/actuator</b></div>
+      <div class="muted">Updated: <span id="lastUpdated">—</span></div>
+      <div class="controls">
+        <button id="themeToggle" class="btn ghost small">🌗</button>
+        <button id="autoRefreshToggle" class="btn ghost small">⏸️</button>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="header">
+      <div class="title">
+        <h2 id="pageTitle">Gateway Dashboard</h2>
+        <p class="muted">Spring Cloud Gateway Management Console</p>
+      </div>
+      <div class="controls">
+        <div class="search-box">
+          <input id="globalSearch" placeholder="Search routes, metrics, filters..." class="input">
+        </div>
+        <button id="exportData" class="btn ghost small">📥 Export</button>
+        <button id="refreshBtn" class="btn primary small">🔄 Refresh</button>
+      </div>
+    </header>
+
+    <main>
+      <!-- DASHBOARD -->
+      <section id="view-dashboard" class="view">
+        <div class="metrics-grid">
+          <!-- KPI Cards -->
+          <div class="kpi-row">
+            <div class="card kpi gradient-blue">
+              <div class="kpi-icon">🔀</div>
+              <div class="kpi-content">
+                <div class="label">Active Routes</div>
+                <div class="value" id="kpi-routes">—</div>
+                <div class="trend" id="kpi-routes-trend">—</div>
+              </div>
+            </div>
+            <div class="card kpi gradient-green">
+              <div class="kpi-icon">⚙️</div>
+              <div class="kpi-content">
+                <div class="label">Global Filters</div>
+                <div class="value" id="kpi-filters">—</div>
+                <div class="trend" id="kpi-filters-trend">—</div>
+              </div>
+            </div>
+            <div class="card kpi gradient-purple">
+              <div class="kpi-icon">📊</div>
+              <div class="kpi-content">
+                <div class="label">HTTP Requests</div>
+                <div class="value" id="kpi-requests">—</div>
+                <div class="trend" id="kpi-requests-trend">—</div>
+              </div>
+            </div>
+            <div class="card kpi gradient-orange">
+              <div class="kpi-icon">💻</div>
+              <div class="kpi-content">
+                <div class="label">CPU Usage</div>
+                <div class="value" id="kpi-cpu">—</div>
+                <div class="trend" id="kpi-cpu-trend">—</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts Row -->
+          <div class="charts-row">
+            <div class="card chart-container">
+              <div class="chart-header">
+                <h3>Request Trends</h3>
+                <div class="chart-controls">
+                  <select id="requestsTimeRange">
+                    <option value="1m">Last 1 min</option>
+                    <option value="5m">Last 5 min</option>
+                    <option value="15m">Last 15 min</option>
+                  </select>
+                </div>
+              </div>
+              <canvas id="requestsChart" width="800" height="300"></canvas>
+            </div>
+            <div class="card chart-container">
+              <div class="chart-header">
+                <h3>System Resources</h3>
+                <div class="legend">
+                  <span class="legend-item"><span class="color-dot cpu"></span>CPU</span>
+                  <span class="legend-item"><span class="color-dot memory"></span>Memory</span>
+                  <span class="legend-item"><span class="color-dot disk"></span>Disk</span>
+                </div>
+              </div>
+              <canvas id="systemChart" width="800" height="300"></canvas>
+            </div>
+          </div>
+
+          <!-- Info Panels -->
+          <div class="info-row">
+            <div class="card info-panel">
+              <h3>System Information</h3>
+              <div id="systemInfo" class="info-grid"></div>
+            </div>
+            <div class="card info-panel">
+              <h3>JVM Metrics</h3>
+              <div id="jvmInfo" class="info-grid"></div>
+            </div>
+            <div class="card info-panel">
+              <h3>Gateway Status</h3>
+              <div id="gatewayInfo" class="info-grid"></div>
+            </div>
+          </div>
+
+          <!-- Routes Overview -->
+          <div class="card full-width">
+            <div class="panel-header">
+              <h3>Routes Overview</h3>
+              <div class="panel-controls">
+                <input id="routeFilter" placeholder="Filter routes..." class="input small">
+                <select id="routeStatusFilter">
+                  <option value="all">All Routes</option>
+                  <option value="authorized">Authorized Only</option>
+                  <option value="public">Public Only</option>
+                </select>
+              </div>
+            </div>
+            <div class="table-container">
+              <table id="routesTable" class="data-table">
+                <thead>
+                <tr>
+                  <th>Route ID</th>
+                  <th>Path</th>
+                  <th>Target URI</th>
+                  <th>Authorization</th>
+                  <th>Filters</th>
+                  <th>Status</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ROUTES -->
+      <section id="view-routes" class="view" hidden>
+        <div class="view-header">
+          <h2>Route Management</h2>
+          <div class="view-controls">
+            <button id="addRoute" class="btn primary">+ Add Route</button>
+            <button id="refreshRoutes" class="btn ghost">🔄 Refresh</button>
+          </div>
+        </div>
+
+        <div class="cards-grid">
+          <div class="card full-width">
+            <div class="panel-header">
+              <h3>Route Definitions</h3>
+              <div class="panel-stats">
+                <span class="stat">Total: <strong id="totalRoutes">0</strong></span>
+                <span class="stat">Active: <strong id="activeRoutes">0</strong></span>
+              </div>
+            </div>
+            <div class="table-container">
+              <table id="routeDefinitionsTable" class="data-table">
+                <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Predicates</th>
+                  <th>URI</th>
+                  <th>Order</th>
+                  <th>Filters</th>
+                  <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card full-width">
+            <div class="panel-header">
+              <h3>Active Routes (Runtime)</h3>
+              <div class="panel-stats">
+                <span class="stat">Loaded: <strong id="loadedRoutes">0</strong></span>
+              </div>
+            </div>
+            <div class="table-container">
+              <table id="activeRoutesTable" class="data-table">
+                <thead>
+                <tr>
+                  <th>Route ID</th>
+                  <th>Predicate</th>
+                  <th>URI</th>
+                  <th>Filters Count</th>
+                  <th>Details</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FILTERS -->
+      <section id="view-filters" class="view" hidden>
+        <div class="view-header">
+          <h2>Filter Management</h2>
+        </div>
+
+        <div class="cards-grid">
+          <div class="card">
+            <h3>Global Filters</h3>
+            <div class="table-container">
+              <table id="globalFiltersTable" class="data-table">
+                <thead>
+                <tr>
+                  <th>Filter Name</th>
+                  <th>Order</th>
+                  <th>Type</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Available Route Filters</h3>
+            <div class="table-container">
+              <table id="routeFiltersTable" class="data-table">
+                <thead>
+                <tr>
+                  <th>Filter Factory</th>
+                  <th>Config Class</th>
+                  <th>Status</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card full-width">
+            <h3>Route Predicates</h3>
+            <div class="table-container">
+              <table id="routePredicatesTable" class="data-table">
+                <thead>
+                <tr>
+                  <th>Predicate Factory</th>
+                  <th>Config Class</th>
+                  <th>Description</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- METRICS -->
+      <section id="view-metrics" class="view" hidden>
+        <div class="view-header">
+          <h2>Metrics Explorer</h2>
+          <div class="view-controls">
+            <input id="metricSearch" placeholder="Search metrics..." class="input">
+          </div>
+        </div>
+
+        <div class="metrics-layout">
+          <div class="card metrics-sidebar">
+            <h3>Available Metrics</h3>
+            <div class="metrics-categories">
+              <div class="category">
+                <h4>HTTP</h4>
+                <div id="httpMetrics" class="metric-list"></div>
+              </div>
+              <div class="category">
+                <h4>JVM</h4>
+                <div id="jvmMetrics" class="metric-list"></div>
+              </div>
+              <div class="category">
+                <h4>System</h4>
+                <div id="systemMetrics" class="metric-list"></div>
+              </div>
+              <div class="category">
+                <h4>Gateway</h4>
+                <div id="gatewayMetrics" class="metric-list"></div>
+              </div>
+              <div class="category">
+                <h4>Other</h4>
+                <div id="otherMetrics" class="metric-list"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card metrics-detail">
+            <div class="metric-header">
+              <h3 id="selectedMetricName">Select a Metric</h3>
+              <div class="metric-controls">
+                <button id="addToChart" class="btn primary small">📊 Add to Chart</button>
+                <button id="exportMetric" class="btn ghost small">📥 Export</button>
+              </div>
+            </div>
+            <div id="metricDetails" class="metric-content">
+              <p class="muted">Select a metric from the sidebar to view details</p>
+            </div>
+            <canvas id="metricChart" width="800" height="400"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- HEALTH -->
+      <section id="view-health" class="view" hidden>
+        <div class="view-header">
+          <h2>Health Monitoring</h2>
+          <div class="health-status" id="overallHealth">
+            <span class="status-indicator">●</span>
+            <span>Checking...</span>
+          </div>
+        </div>
+
+        <div class="cards-grid">
+          <div class="card health-overview">
+            <h3>System Health</h3>
+            <div id="healthComponents" class="health-grid"></div>
+          </div>
+
+          <div class="card">
+            <h3>Disk Space</h3>
+            <div id="diskSpace" class="disk-info"></div>
+          </div>
+
+          <div class="card">
+            <h3>Discovery Status</h3>
+            <div id="discoveryStatus" class="discovery-info"></div>
+          </div>
+
+          <div class="card full-width">
+            <h3>Health History</h3>
+            <canvas id="healthChart" width="800" height="200"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- MONITORING -->
+      <section id="view-monitoring" class="view" hidden>
+        <div class="view-header">
+          <h2>Live Monitoring</h2>
+          <div class="monitoring-controls">
+            <button id="pauseMonitoring" class="btn ghost">⏸️ Pause</button>
+            <select id="refreshInterval">
+              <option value="1000">1s</option>
+              <option value="5000" selected>5s</option>
+              <option value="10000">10s</option>
+              <option value="30000">30s</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="monitoring-grid">
+          <div class="card realtime-chart">
+            <h3>Real-time Requests</h3>
+            <canvas id="realtimeChart" width="800" height="300"></canvas>
+          </div>
+
+          <div class="card activity-log">
+            <h3>Activity Log</h3>
+            <div id="activityLog" class="log-container"></div>
+          </div>
+
+          <div class="card performance-metrics">
+            <h3>Performance Metrics</h3>
+            <div id="performanceMetrics" class="metrics-display"></div>
+          </div>
+
+          <div class="card alerts">
+            <h3>Alerts & Warnings</h3>
+            <div id="alertsContainer" class="alerts-list"></div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- Modals -->
+<!-- Removed hidden attribute, now controlled by CSS and JavaScript -->
+<div id="exportModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Export Data</h3>
+      <button class="modal-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="export-options">
+        <label><input type="checkbox" id="exportRoutes" checked> Routes</label>
+        <label><input type="checkbox" id="exportFilters" checked> Filters</label>
+        <label><input type="checkbox" id="exportMetrics" checked> Metrics</label>
+        <label><input type="checkbox" id="exportHealth" checked> Health</label>
+      </div>
+      <div class="export-format">
+        <label>Format:</label>
+        <select id="exportFormat">
+          <option value="json">JSON</option>
+          <option value="csv">CSV</option>
+          <option value="xml">XML</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button id="doExport" class="btn primary">Export</button>
+      <button class="modal-close btn ghost">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script src="/api/dashboard/js/theme.js"></script>
+<script src="/api/dashboard/js/charts.js"></script>
+<script src="/api/dashboard/js/export.js"></script>
+<script src="/api/dashboard/js/app.js"></script>
+</body>
+</html>

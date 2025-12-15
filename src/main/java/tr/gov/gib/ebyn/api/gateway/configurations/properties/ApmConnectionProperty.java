@@ -1,0 +1,24 @@
+package tr.gov.gib.ebyn.api.gateway.configurations.properties;
+
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+@ConfigurationProperties(prefix = "elastic.apm")
+@Getter
+@Setter
+public class ApmConnectionProperty {
+
+  private String serverUrl;
+  private String serviceName;
+  private String environment;
+  private String applicationPackages;
+  private String logLevel;
+  private boolean enableExperimentalInstrumentations;
+  private double transactionSampleRate;
+  private String spanFramesMinDuration;
+  private String metricsInterval;
+  private boolean usePathAsTransactionName;
+}

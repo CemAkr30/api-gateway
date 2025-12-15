@@ -1,0 +1,79 @@
+# Server Configuration
+server:
+  shutdown: graceful
+
+# Spring App Configuration & Gateway Cloud Default-Filters Configuration
+spring:
+  webflux:
+    base-path: /api
+  main:
+    web-application-type: reactive
+  application:
+    name: ${appName:api-gateway}
+  data:
+    elasticsearch:
+      repositories:
+        enabled: false
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+      routes:
+        - id: testService
+          uri: http://localhost:1080
+          predicates:
+            - Path=${spring.webflux.base-path}/test/**
+      default-filters:
+        - Authorization=true
+        - StripBasePath=/api
+
+# Logging
+logging:
+  level:
+    root: info
+
+# Management Endpoints Actuator
+management:
+  endpoint:
+    health:
+      group:
+        custom:
+          include: "*"
+          show-components: always
+          show-details: always
+  elastic:
+    metrics:
+      export:
+        host: x
+        enabled: true
+        user-name: x
+        password: x
+        step: 10s
+  tracing:
+    sampling:
+      probability: 1.0
+
+app:
+  log:
+    path: ${LOG_PATH:./log}
+  pod:
+    name: ${POD_NAME:api-gateway}
+
+elastic:
+  apm:
+    server-url: X
+    service-name: api-gateway
+    application-packages: tr.gov.gib.api.gateway
+    environment: local
+    log-level: INFO
+    enable-experimental-instrumentations: true
+    transaction-sample-rate: 1.0
+    span-frames-min-duration: -1ms
+    metrics-interval: 10s
+    use-path-as-transaction-name: true
+
+# API Key Security Configuration
+api-security:
+  key: aaaa
+  fixedTokens: aaaa
