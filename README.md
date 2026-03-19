@@ -1,5 +1,6 @@
 # API Gateway — EBYN (Electronic Declaration System)
 
+I designed and built this API Gateway from scratch.
 A Spring Cloud Gateway-based API Gateway service developed at GİB Teknoloji, providing secure and centralized access to declaration microservices.
 
 ## What It Does
